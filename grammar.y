@@ -1,30 +1,49 @@
 %{
-#define YYSTYPE int
-#include<stdio.h>
-#include<math.h>
-extern int yylineno;  
+// #define YYSTYPE string
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+#include <vector>
+#include <algorithm>
+using namespace std;
 int yylex();
-int yyerror(char*);
-int err = 0;
+extern int yylineno;
+int yyerror(const string str);
+
+vector<string> code;
+void command(string str);
+
+
 %}
-%token SEMICOLON
-%token EQUAL
+%union {
+    char* str;
+    long long int num;
+}
+%token SEM
+%token EQ
 %token ASSIGN
-%token COLON
-%token LBRAC
-%token RBRAC
+%token COL
+%token LB
+%token RB
 
 %token ADD
 %token SUB
-%token MULT
+%token MUL
 %token DIV
 %token MOD
 
-%token NEQUAL
-%token LESS
-%token GREAT
-%token LESSEQUAL
-%token GREATEQUAL
+%token NE
+%token LT
+%token GT
+%token LE
+%token GE
 
 %token DECLARE
 %token IN
@@ -48,54 +67,66 @@ int err = 0;
 %token NUM
 %token IDENTIFIER
 %%
-program: DECLARE declarations IN commands END;
+program: DECLARE declarations IN commands END {command("HALT");};
 
-declarations: declarations pidentifier SEMICOLON
-             | declarations pidentifier LBARC num COLON num LBRAC SEMICOLON
-             | ;
+declarations: declarations pidentifier SEM {}
+             | declarations pidentifier LB num COL num RB SEM {}
+             | {};
 
-commands:   commands command
-             | command;
+commands:   commands command {}
+             | command {};
 
-command:    identifier ASSIGN expression SEMICOLON
-             | IF condition THEN commands ELSE commands ENDIF
-             | IF condition THEN commands ENDIF
-             | WHILE condition DO commands ENDWHILE
-             | DO commands WHILE condition ENDDO
-             | FOR pidentifier FROM value TO value DO commands ENDFOR
-             | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR
-             | READ identifier SEMICOLON
-             | WRITE value SEMICOLON ;
+command:    identifier ASSIGN expression SEM {}
+             | IF condition THEN commands ELSE commands ENDIF {}
+             | IF condition THEN commands ENDIF {}
+             | WHILE condition DO commands ENDWHILE {}
+             | DO commands WHILE condition ENDDO {}
+             | FOR pidentifier FROM value TO value DO commands ENDFOR {}
+             | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR {}
+             | READ identifier SEM {}
+             | WRITE value SEM {} ;
 
-expression:  value
-             | value ADD value
-             | value SUB value
-             | value MULT value
-             | value DIV value
-             | value SUB value;
+expression:  value {}
+             | value ADD value {}
+             | value SUB value {}
+             | value MUL value {}
+             | value DIV value {}
+             | value SUB value {};
 
-condition:   value EQUAL value
-             | value NEQUAL value
-             | value LESS value
-             | value GREAT value
-             | value LESSEQUAL value
-             | value GREATEQUAL value;
+condition:   value EQ value {}
+             | value NE value {}
+             | value LT value {}
+             | value GT value {}
+             | value LE value {}
+             | value GE value {};
 
-value:       num
-             | identifier;
+value:       num {}
+             | identifier {};
 
-identifier: pidentifier
-             | pidentifier LBRAC pidentifier RBRAC
-             | pidentifier LBARC num RBRAC;
+identifier: pidentifier {}
+             | pidentifier LB pidentifier RB {}
+             | pidentifier LB num RB {};
+num:
+    NUM {};
+
+pidentifier:
+    IDENTIFIER {};
 %%
-int yyerror(char *s)
-{
-    printf("%s\n",s);
-    return 0;
+void command(string str) {
+    code.push_back(str);
+}
+void printCodeStd() {
+	long long int i;
+	for(i = 0; i < code.size(); i++)
+        cout << code.at(i) << endl;
 }
 
-int main()
+int main(int argv, char* argc[])
 {
     yyparse();
+    printCodeStd();
     return 0;
+}
+int yyerror(string str){
+   exit(1);
 }

@@ -3,10 +3,10 @@
 all: kompilator
 
 
-calc: grammar.y lexer.l
+kompilator: grammar.y lexer.l
 	bison -o grammar.c -d grammar.y
 	flex -o lexer.c lexer.l
-	gcc -o kompilator grammar.c lexer.c -ll -lm
+	g++ -std=c++11 -o kompilator lexer.c grammar.c -lfl
 
 clean:
 	rm -f *.c *.h

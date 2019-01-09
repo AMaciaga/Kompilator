@@ -3,98 +3,96 @@
 %s IN_COMMENT
 %{
 
-#include "grammar_y.h"
-
+#include "grammar.h"
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
 %}
 %%
 
-<INITIAL>"["        BEGIN(IN_COMMENT);
-<INITIAL>";"        {
-                    return SEMICOLON;
+"["        BEGIN(IN_COMMENT);
+";"        {
+                    return SEM;
                     }
-<INITIAL>"="        {
-                    return EQUAL;
+"="        {
+                    return EQ;
                     }
-<INITIAL>":="       {
+":="       {
                     return ASSIGN;
                     }
-<INITIAL>":"       {
-                    return COLON;
+":"       {
+                    return COL;
                     }
-<INITIAL>"("       {
-                    return LBRAC;
+"("       {
+                    return LB;
                     }
-<INITIAL>")"       {
-                    return RBRAC;
+")"       {
+                    return RB;
                     }
 
-<INITIAL>"+"        {
+"+"        {
                     return ADD;
                     }
-<INITIAL>"-"        {
+"-"        {
                     return SUB;
                     }
-<INITIAL>"*"        {
-                    return MULT;
+"*"        {
+                    return MUL;
                     }
-<INITIAL>"/"        {
+"/"        {
                     return DIV; 
                     }
-<INITIAL>"%"        {
-                    // return MOD;  
+"%"        {
+                    return MOD;  
                     }
 
-<INITIAL>"!="       {
-                    return NEQUAL;  
+"!="       {
+                    return NE;  
                     }
-<INITIAL>"<"        {  
-                    return LESS;    
+"<"        {  
+                    return LT;    
                     }
-<INITIAL>">"        {
-                    return GREAT;   
+">"        {
+                    return GT;   
                     }
-<INITIAL>"<="       { 
-                    return LESSEQUAL;
+"<="       { 
+                    return LE;
                     }
-<INITIAL>">="       {
-                    return GREATEQUAL;  
+">="       {
+                    return GE;  
                     }
 
-<IN_COMMENT>[^\]]   ;
+<IN_COMMENT>[^\]]|[\n]   ;
 <IN_COMMENT>\]      BEGIN(INITIAL);
 
-<INITIAL>"DECLARE"  {return DECLARE;}
-<INITIAL>"IN"  {return IN;}
-<INITIAL>"END"  {return END;}
-<INITIAL>"IF"  {return IF;}
-<INITIAL>"THEN"  {return THEN;}
-<INITIAL>"ELSE"  {return ELSE;}
-<INITIAL>"ENDIF"  {return ENDIF;}
-<INITIAL>"WHILE"  {return WHILE;}
-<INITIAL>"DO"  {return DO;}
-<INITIAL>"ENDWHILE"  {return ENDWHILE;}
-<INITIAL>"ENDDO"  {return ENDDO;}
-<INITIAL>"FOR"  {return FOR;}
-<INITIAL>"FROM"  {return FROM;}
-<INITIAL>"TO"  {return TO;}
-<INITIAL>"DOWNTO"  {return DOWNTO;}
-<INITIAL>"ENDFOR"  {return ENDFOR;}
-<INITIAL>"READ"  {return READ;}
-<INITIAL>"WRITE"  {return WRITE;}
+"DECLARE"  {return DECLARE;}
+"IN"  {return IN;}
+"END"  {return END;}
+"IF"  {return IF;}
+"THEN"  {return THEN;}
+"ELSE"  {return ELSE;}
+"ENDIF"  {return ENDIF;}
+"WHILE"  {return WHILE;}
+"DO"  {return DO;}
+"ENDWHILE"  {return ENDWHILE;}
+"ENDDO"  {return ENDDO;}
+"FOR"  {return FOR;}
+"FROM"  {return FROM;}
+"TO"  {return TO;}
+"DOWNTO"  {return DOWNTO;}
+"ENDFOR"  {return ENDFOR;}
+"READ"  {return READ;}
+"WRITE"  {return WRITE;}
 
-<INITIAL>[A-Z]+	     {printf("ERROR_INVALID_KEYWORD");}
-<INITIAL>[0-9]+         {ECHO; 
-                        // yylval = std::string(yytext);
-                        // return NUM; 
+[A-Z]+	     {printf("ERROR_INVALID_KEYWORD");}
+[0-9]+         {
+                yylval.str = (char *)strdup(yytext);
+                return NUM;
+                }
+[_a-z]+        {
+                yylval.str = (char *)strdup(yytext);
+                return IDENTIFIER;  
                         }
-<INITIAL>[_a-z]+        {ECHO;
-                        // yylval = std::string(yytext);  
-                        // return IDENTIFIER;  
-                        }
-<INITIAL>[ \n\t]         ECHO;
+[ \n\t\r]         ;
 
 %%
-int main(){
-	yylex();
-	
-}
