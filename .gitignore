@@ -1,3 +1,7 @@
+# Files in foldera #
+####################
+maszyna_rejestrowa/*
+
 # Compiled source #
 ###################
 *.h

@@ -33,14 +33,18 @@ id assignedVar;
 string expVal[2]={"-1","-1"};
 string expReg;
 void setIndex(long long int mem);
-void storeToMem(string r);
+void writeCommandWithArg(string com,string arg);
+void writeCommandWithTwoArg(string com,string arg1,string arg2);
 string findEmptyReg();
+void freeReg(string str);
 void addVariable(id s);
 void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init );
 void generateNumber(long long int arg,string r);
 void writeCommand(string str);
 void outCode(string file);
 long long int findIndexOf(vector<id> v, string name);
+void add(id a, id b);
+void sub(id a, id b);
 
 %}
 %union {
@@ -141,8 +145,9 @@ command:
         }
         else{
             setIndex(assignedVar.memPlace);
-            storeToMem(expReg);
+            writeCommandWithArg("STORE",expReg);
         }
+        freeReg(expReg);
         vars.at(findIndexOf(vars,assignedVar.name)).init=true;
         isCurrAssign=true;
     }
@@ -153,7 +158,39 @@ command:
     | FOR pidentifier FROM value TO value DO commands ENDFOR {}
     | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR {}
     | READ identifier SEM {}
-    | WRITE value SEM {} ;
+    | WRITE {isCurrAssign = false;} value SEM {
+
+        id arg = vars.at(findIndexOf(vars,expVal[0]));
+        if(arg.type == "NUM"){
+            string regVal = findEmptyReg();
+            if(regVal != "X"){
+                generateNumber(atoi(arg.name.c_str()),regVal);
+                expReg = regVal;
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
+        }
+        else if(arg.type == "ID") {
+            string regVal = findEmptyReg();
+            if(regVal != "X"){
+                setIndex(arg.memPlace);
+                writeCommandWithArg("LOAD",regVal);
+                expReg = regVal;
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
+        }
+        expVal[0] = "-1";
+
+
+        writeCommandWithArg("PUT",expReg);
+        freeReg(expReg);
+        isCurrAssign=true;
+    } ;
 
 expression: 
     value {
@@ -164,14 +201,47 @@ expression:
                 generateNumber(atoi(arg.name.c_str()),regVal);
                 expReg = regVal;
             }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
         }
-        else if(arg.type == "IDE") {
-            // memToRegister(ide.mem);
+        else if(arg.type == "ID") {
+            string regVal = findEmptyReg();
+            if(regVal != "X"){
+                setIndex(arg.memPlace);
+                writeCommandWithArg("LOAD",regVal);
+                expReg = regVal;
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
         }
         expVal[0] = "-1";
     }
-    | value ADD value {}
-    | value SUB value {}
+    | value ADD value {
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        if(a.type != "ARR" && b.type != "ARR")
+            add(a, b);
+        else{
+
+        }
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+    }
+    | value SUB value {
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        if(a.type != "ARR" && b.type != "ARR")
+            sub(a, b);
+        else{
+
+        }
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+    }
     | value MUL value {}
     | value DIV value {}
     | value MOD value {};
@@ -241,8 +311,12 @@ pidentifier:
 void setIndex(long long int mem){
     generateNumber(mem,"A");
 }
-void storeToMem(string r){
-    string temp = "STORE "+ r;
+void writeCommandWithArg(string com,string arg){
+    string temp = com+" "+ arg;
+    code.push_back(temp);
+}
+void writeCommandWithTwoArg(string com,string arg1,string arg2){
+    string temp = com+" "+ arg1 + " "+arg2;
     code.push_back(temp);
 }
 string findEmptyReg(){
@@ -258,6 +332,179 @@ string findEmptyReg(){
     }
     return "X";
 }
+
+void add(id a, id b){
+
+    if(a.type == "NUM" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoi(a.name.c_str()),regValB);
+            writeCommandWithTwoArg("ADD",regValA,regValB);
+            expReg = regValA;
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        
+    }
+    else if(a.type == "NUM" && b.type == "ID") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            setIndex(b.memPlace);
+            writeCommandWithArg("LOAD",regValB);
+            writeCommandWithTwoArg("ADD",regValA,regValB);
+            expReg = regValA;
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  ){
+            generateNumber(atoi(b.name.c_str()),regValB);
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regValA);
+            writeCommandWithTwoArg("ADD",regValA,regValB);
+            expReg = regValA;
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "ID") {
+        if(a.name == b.name) {
+            string regValA = findEmptyReg();
+            if(regValA != "X" ){
+                setIndex(a.memPlace);
+                writeCommandWithArg("LOAD",regValA);
+                writeCommandWithTwoArg("ADD",regValA,regValA);
+                expReg = regValA;
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
+        }
+        else {
+            string regValA = findEmptyReg();
+            string regValB = findEmptyReg();
+            if(regValA != "X" && regValB != "X"  ){
+                setIndex(a.memPlace);
+                writeCommandWithArg("LOAD",regValA);
+                setIndex(b.memPlace);
+                writeCommandWithArg("LOAD",regValB);
+                writeCommandWithTwoArg("ADD",regValA,regValB);
+                expReg = regValA;
+                freeReg(regValB);
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
+        }
+    }
+}
+
+void sub(id a, id b){
+
+    if(a.type == "NUM" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoi(a.name.c_str()),regValB);
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            expReg = regValA;
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        
+    }
+    else if(a.type == "NUM" && b.type == "ID") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            setIndex(b.memPlace);
+            writeCommandWithArg("LOAD",regValB);
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            expReg = regValA;
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  ){
+            generateNumber(atoi(b.name.c_str()),regValB);
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regValA);
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            expReg = regValA;
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "ID") {
+        if(a.name == b.name) {
+            string regValA = findEmptyReg();
+            if(regValA != "X" ){
+                setIndex(a.memPlace);
+                writeCommandWithArg("LOAD",regValA);
+                writeCommandWithTwoArg("SUB",regValA,regValA);
+                expReg = regValA;
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
+        }
+        else {
+            string regValA = findEmptyReg();
+            string regValB = findEmptyReg();
+            if(regValA != "X" && regValB != "X"  ){
+                setIndex(a.memPlace);
+                writeCommandWithArg("LOAD",regValA);
+                setIndex(b.memPlace);
+                writeCommandWithArg("LOAD",regValB);
+                writeCommandWithTwoArg("SUB",regValA,regValB);
+                expReg = regValA;
+                freeReg(regValB);
+            }
+            else{
+                cout << "zrzut pamieci" << endl;
+                exit(1);
+            }
+        }
+    }
+}
+
+
+
+
+
 void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init ){
     s->name = name;
     s->type = type;
@@ -270,7 +517,12 @@ void createVariable(id* s,string name, string type, long long int size,long long
 void addVariable(id s){
     vars.push_back(s);
 }
+void freeReg(string str){
+    char c = str.at(0);
+    int i = (int)c -65;
+    reg[i] = "";
 
+}
 void writeCommand(string str) {
     code.push_back(str);
 }
