@@ -24,6 +24,7 @@ typedef struct {
     long long int startsAt; // 0 forn non array variables
     long long int memPlace;
 } id;
+long long int linesNo;
 long long int memAssign;
 vector<string> code;
 vector<id> vars;
@@ -31,6 +32,8 @@ string reg[8];
 bool isCurrAssign=true;
 id assignedVar;
 string expVal[2]={"-1","-1"};
+string divReg;
+string modReg;
 string expReg;
 void setIndex(long long int mem);
 void writeCommandWithArg(string com,string arg);
@@ -45,6 +48,8 @@ void outCode(string file);
 long long int findIndexOf(vector<id> v, string name);
 void add(id a, id b);
 void sub(id a, id b);
+void mult(id a, id b);
+void div(id a, id b);
 
 %}
 %union {
@@ -157,7 +162,9 @@ command:
     | DO commands WHILE condition ENDDO {}
     | FOR pidentifier FROM value TO value DO commands ENDFOR {}
     | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR {}
-    | READ identifier SEM {}
+    | READ identifier SEM {
+        
+    }
     | WRITE {isCurrAssign = false;} value SEM {
 
         id arg = vars.at(findIndexOf(vars,expVal[0]));
@@ -242,9 +249,46 @@ expression:
         expVal[0] = "-1";
         expVal[1] = "-1";
     }
-    | value MUL value {}
-    | value DIV value {}
-    | value MOD value {};
+    | value MUL value {
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        if(a.type != "ARR" && b.type != "ARR")
+            mult(a, b);
+        else{
+
+        }
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+    }
+    | value DIV value {
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        if(a.type != "ARR" && b.type != "ARR"){
+            cout<<a.name<<b.name<<endl;
+            div(a, b);
+            expReg = divReg;
+            freeReg(modReg);
+        }
+        else{
+
+        }
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+    }
+    | value MOD value {
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        if(a.type != "ARR" && b.type != "ARR"){
+            div(a, b);
+            expReg = modReg;
+            freeReg(divReg);
+        }
+        else{
+
+        }
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+    };
 
 condition:   
     value EQ value {}
@@ -314,10 +358,12 @@ void setIndex(long long int mem){
 void writeCommandWithArg(string com,string arg){
     string temp = com+" "+ arg;
     code.push_back(temp);
+    linesNo++;
 }
 void writeCommandWithTwoArg(string com,string arg1,string arg2){
     string temp = com+" "+ arg1 + " "+arg2;
     code.push_back(temp);
+    linesNo++;
 }
 string findEmptyReg(){
     for(int i = 7;i>=1;--i){
@@ -340,7 +386,7 @@ void add(id a, id b){
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
             generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(a.name.c_str()),regValB);
+            generateNumber(atoi(b.name.c_str()),regValB);
             writeCommandWithTwoArg("ADD",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -424,7 +470,7 @@ void sub(id a, id b){
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
             generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(a.name.c_str()),regValB);
+            generateNumber(atoi(b.name.c_str()),regValB);
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -500,7 +546,278 @@ void sub(id a, id b){
         }
     }
 }
+void mult(id a, id b){
 
+    if(a.type == "NUM" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X"  ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoi(b.name.c_str()),regValB);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("JZERO",regValA,to_string(linesNo+7));
+            writeCommandWithTwoArg("JODD",regValA,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo+2));
+            writeCommandWithTwoArg("ADD",regValC,regValB);
+            writeCommandWithArg("HALF",regValA);
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithArg("JUMP",to_string(linesNo-6));
+            expReg = regValC;
+            freeReg(regValA);
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        
+    }
+    else if(a.type == "NUM" && b.type == "ID") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X"  ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            setIndex(b.memPlace);
+            writeCommandWithArg("LOAD",regValB);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("JZERO",regValA,to_string(linesNo+7));
+            writeCommandWithTwoArg("JODD",regValA,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo+2));
+            writeCommandWithTwoArg("ADD",regValC,regValB);
+            writeCommandWithArg("HALF",regValA);
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithArg("JUMP",to_string(linesNo-6));
+            expReg = regValC;
+            freeReg(regValA);
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        if(regValA != "X" && regValB != "X"  && regValC != "X" ){
+            generateNumber(atoi(b.name.c_str()),regValB);
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regValA);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("JZERO",regValA,to_string(linesNo+7));
+            writeCommandWithTwoArg("JODD",regValA,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo+2));
+            writeCommandWithTwoArg("ADD",regValC,regValB);
+            writeCommandWithArg("HALF",regValA);
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithArg("JUMP",to_string(linesNo-6));
+            expReg = regValC;
+            freeReg(regValA);
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "ID") {
+        
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X"  ){
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regValA);
+            setIndex(b.memPlace);
+            writeCommandWithArg("LOAD",regValB);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("JZERO",regValA,to_string(linesNo+7));
+            writeCommandWithTwoArg("JODD",regValA,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo+2));
+            writeCommandWithTwoArg("ADD",regValC,regValB);
+            writeCommandWithArg("HALF",regValA);
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithArg("JUMP",to_string(linesNo-6));
+            expReg = regValC;
+            freeReg(regValA);
+            freeReg(regValB);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        
+    }
+}
+void div(id a, id b){
+
+    if(a.type == "NUM" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        string regValD = findEmptyReg();
+        string regValE = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoi(b.name.c_str()),regValB);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("SUB",regValD,regValD);
+            writeCommandWithArg("INC",regValD);
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+4));
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithTwoArg("ADD",regValD,regValD);
+            writeCommandWithArg("JUMP",to_string(linesNo-5));
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithArg("INC",regValE);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+3));
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            writeCommandWithTwoArg("ADD",regValC,regValD);
+            writeCommandWithArg("HALF",regValB);
+            writeCommandWithArg("HALF",regValD);
+            writeCommandWithTwoArg("JZERO",regValD,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo-9));
+            divReg = regValC;
+            modReg = regValA;
+            freeReg(regValB);
+            freeReg(regValD);
+            freeReg(regValE);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        
+    }
+    else if(a.type == "NUM" && b.type == "ID") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        string regValD = findEmptyReg();
+        string regValE = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
+            generateNumber(atoi(a.name.c_str()),regValA);
+            setIndex(b.memPlace);
+            writeCommandWithArg("LOAD",regValB);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("SUB",regValD,regValD);
+            writeCommandWithArg("INC",regValD);
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+4));
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithTwoArg("ADD",regValD,regValD);
+            writeCommandWithArg("JUMP",to_string(linesNo-5));
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithArg("INC",regValE);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+3));
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            writeCommandWithTwoArg("ADD",regValC,regValD);
+            writeCommandWithArg("HALF",regValB);
+            writeCommandWithArg("HALF",regValD);
+            writeCommandWithTwoArg("JZERO",regValD,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo-9));
+            divReg = regValC;
+            modReg = regValA;
+            freeReg(regValB);
+            freeReg(regValD);
+            freeReg(regValE);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "NUM") {
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        string regValD = findEmptyReg();
+        string regValE = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
+            generateNumber(atoi(b.name.c_str()),regValB);
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regValA);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("SUB",regValD,regValD);
+            writeCommandWithArg("INC",regValD);
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+4));
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithTwoArg("ADD",regValD,regValD);
+            writeCommandWithArg("JUMP",to_string(linesNo-5));
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithArg("INC",regValE);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+3));
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            writeCommandWithTwoArg("ADD",regValC,regValD);
+            writeCommandWithArg("HALF",regValB);
+            writeCommandWithArg("HALF",regValD);
+            writeCommandWithTwoArg("JZERO",regValD,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo-9));
+            divReg = regValC;
+            modReg = regValA;
+            freeReg(regValB);
+            freeReg(regValD);
+            freeReg(regValE);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+    else if(a.type == "ID" && b.type == "ID") {
+        
+        string regValA = findEmptyReg();
+        string regValB = findEmptyReg();
+        string regValC = findEmptyReg();
+        string regValD = findEmptyReg();
+        string regValE = findEmptyReg();
+        if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regValA);
+            setIndex(b.memPlace);
+            writeCommandWithArg("LOAD",regValB);
+            writeCommandWithTwoArg("SUB",regValC,regValC);
+            writeCommandWithTwoArg("SUB",regValD,regValD);
+            writeCommandWithArg("INC",regValD);
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+4));
+            writeCommandWithTwoArg("ADD",regValB,regValB);
+            writeCommandWithTwoArg("ADD",regValD,regValD);
+            writeCommandWithArg("JUMP",to_string(linesNo-5));
+            writeCommandWithTwoArg("COPY",regValE,regValA);
+            writeCommandWithArg("INC",regValE);
+            writeCommandWithTwoArg("SUB",regValE,regValB);
+            writeCommandWithTwoArg("JZERO",regValE,to_string(linesNo+3));
+            writeCommandWithTwoArg("SUB",regValA,regValB);
+            writeCommandWithTwoArg("ADD",regValC,regValD);
+            writeCommandWithArg("HALF",regValB);
+            writeCommandWithArg("HALF",regValD);
+            writeCommandWithTwoArg("JZERO",regValD,to_string(linesNo+2));
+            writeCommandWithArg("JUMP",to_string(linesNo-9));
+            divReg = regValC;
+            modReg = regValA;
+            freeReg(regValB);
+            freeReg(regValD);
+            freeReg(regValE);
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        
+    }
+}
 
 
 
@@ -525,6 +842,7 @@ void freeReg(string str){
 }
 void writeCommand(string str) {
     code.push_back(str);
+    linesNo++;
 }
 void generateNumber(long long int arg,string r){
     vector<string>genNum;
@@ -542,7 +860,7 @@ void generateNumber(long long int arg,string r){
     string temp = "SUB "+ r+" "+r;
     genNum.push_back(temp);
     for(int i=genNum.size()-1;i>=0;--i){
-        code.push_back(genNum.at(i));
+        writeCommand(genNum.at(i));
     }
 
 }
@@ -565,6 +883,7 @@ long long int findIndexOf(vector<id> v, string name){
 int main(int argv, char* argc[])
 {
     memAssign =0;
+    linesNo = 0;
 
     yyparse();
     if(argv < 2){
