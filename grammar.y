@@ -14,10 +14,12 @@
 using namespace std;
 int yylex();
 extern int yylineno;
+extern FILE *yyin;
 int yyerror(const string str);
 
 typedef struct {
     bool init;
+    bool isLocal;
 	string name;
     string type; 
   	long long int size; // 0 forn non array variables
@@ -28,6 +30,7 @@ long long int linesNo;
 long long int memAssign;
 vector<string> code;
 vector<id> vars;
+vector<id> loops;
 string reg[8];
 bool isCurrAssign=true;
 id assignedVar;
@@ -44,7 +47,7 @@ void writeCommandWithTwoArg(string com,string arg1,string arg2);
 string findEmptyReg();
 void freeReg(string str);
 void addVariable(id s);
-void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init );
+void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init,bool isLocal );
 void generateNumber(long long int arg,string r);
 void writeCommand(string str);
 void outCode(string file);
@@ -119,7 +122,7 @@ declarations:
         }
         else {
             id s;
-            createVariable(&s,$2,"ID",0,0,memAssign,false);
+            createVariable(&s,$2,"ID",0,0,memAssign,false,false);
             memAssign++;
             addVariable(s);
         }
@@ -139,7 +142,7 @@ declarations:
         else {
             id s;
             long long int size = atoi($6)-atoi($4)+1;
-            createVariable(&s,$2,"ARR",size,atoi($4),memAssign,false);
+            createVariable(&s,$2,"ARR",size,atoi($4),memAssign,false,false);
             memAssign+= size;
             addVariable(s);
         }
@@ -168,7 +171,9 @@ command:
     | IF condition THEN commands ENDIF {}
     | WHILE condition DO commands ENDWHILE {}
     | DO commands WHILE condition ENDDO {}
-    | FOR pidentifier FROM value TO value DO commands ENDFOR {}
+    | FOR pidentifier FROM value TO value DO commands ENDFOR {
+
+    }
     | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR {}
     | READ identifier SEM {
         if(assignedVar.type == "ARR"){
@@ -369,7 +374,7 @@ value:
             exit(1);
         }
         id s;
-        createVariable(&s,$1,"NUM",0,0,memAssign,true);
+        createVariable(&s,$1,"NUM",0,0,memAssign,true,false);
         memAssign++;
         addVariable(s);
         if(expVal[0]=="-1"){
@@ -402,6 +407,11 @@ identifier:
                 }
             }
             else{
+                if(vars.at(index).isLocal){
+                    cout << "Błąd linia " << yylineno << \
+                    "]: Próba modyfikacji iteratora pętli." << endl;
+                    exit(1);
+                }
                 assignedVar = vars.at(index);
             }
         }
@@ -440,8 +450,6 @@ identifier:
             }
 
             if(!isCurrAssign){
-                //TODO czy wywalać błąd niezainicjalizowanej
-                //zmiennej dla elementu tablicy
                 if (expVal[0] == "-1"){
                     expVal[0] = $1;
                     expInd[0] = $3;
@@ -473,14 +481,13 @@ identifier:
         }
         else {
             id s;
-            createVariable(&s,$3,"NUM",0,0,memAssign,true);
+            createVariable(&s,$3,"NUM",0,0,memAssign,true,false);
             memAssign++;
             addVariable(s);
 
             
             if(!isCurrAssign){
-                //TODO czy wywalać błąd niezainicjalizowanej
-                //zmiennej dla elementu tablicy
+                
                 if (expVal[0] == "-1"){
                     expVal[0] = $1;
                     expInd[0] = $3;
@@ -1595,13 +1602,14 @@ void divTab(id a, id b, string aInd, string bInd){
 }
 
 
-void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init ){
+void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init ,bool isLocal){
     s->name = name;
     s->type = type;
     s->size = size;
     s->startsAt = startsAt;
     s->memPlace = mem;
     s->init = init;
+    s->isLocal = isLocal;
 }
 
 void addVariable(id s){
@@ -1662,17 +1670,21 @@ long long int findIndexOf(vector<id> v, string name){
     return -1;
 }
 
-int main(int argv, char* argc[])
+int main(int argc, char* argv[])
 {
-    memAssign =0;
-    linesNo = 0;
-
-    yyparse();
-    if(argv < 2){
+    
+    if(argc < 3){
         cout<<"Nie podano parametrow"<<endl;
     }
     else{
-        string file = argc[1];
+        yyin = fopen(argv[1], "r");
+        if ( ! yyin ) {
+            cout << "Error - could not open file " << argv[1] << "." << endl;
+        }
+        memAssign =0;
+        linesNo = 0;
+        yyparse();
+        string file = argv[2];
         outCode(file);
     }
     return 0;
