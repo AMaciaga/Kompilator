@@ -11,7 +11,7 @@
 %%
 
 "["        BEGIN(IN_COMMENT);
-";"        {
+";"        {    
                     return SEM;
                     }
 "="        {
@@ -62,8 +62,9 @@
                     return GE;  
                     }
 
-<IN_COMMENT>[^\]]|[\n]   ;
-<IN_COMMENT>\]      BEGIN(INITIAL);
+<IN_COMMENT>"]"    BEGIN(INITIAL);
+<IN_COMMENT>[^\]]+ 
+	
 
 "DECLARE"  {return DECLARE;}
 "IN"  {return IN;}
@@ -86,13 +87,16 @@
 
 [A-Z]+	     {printf("ERROR_INVALID_KEYWORD");}
 [0-9]+         {
+        
                 yylval.str = (char *)strdup(yytext);
                 return NUM;
                 }
 [_a-z]+        {
+        
                 yylval.str = (char *)strdup(yytext);
                 return IDENTIFIER;  
                         }
-[ \n\t\r]         ;
+[ \n\t\r]         
+
 
 %%
