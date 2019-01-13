@@ -205,8 +205,32 @@ command:
         writeCommandWithArg("JUMP",to_string(-linesNo));
         isCurrAssign= true;
         } commands ifcond
-    | WHILE condition DO commands ENDWHILE {}
-    | DO commands WHILE condition ENDDO {}
+    | whileloop DO{
+        writeCommandWithTwoArg("JZERO",expReg,to_string(linesNo+2));
+        loop l;
+        createLoop(&l,"",linesNo,"");
+        loops.push_back(l);
+        writeCommandWithArg("JUMP",to_string(-linesNo));
+        isCurrAssign= true;
+    } commands ENDWHILE {
+        loop l = loops.back();
+        loops.pop_back();
+        replaceJump(linesNo+1,to_string(-l.currLineNo));
+        l = loops.back();
+        loops.pop_back();
+        writeCommandWithArg("JUMP",to_string(l.currLineNo));
+    }
+    | DO{
+        loop l;
+        createLoop(&l,"",linesNo,"");
+        loops.push_back(l);
+    } commands whileloop ENDDO {
+        loops.pop_back();
+        loop l = loops.back();
+        loops.pop_back();
+        writeCommandWithTwoArg("JZERO",expReg,to_string(l.currLineNo));
+        isCurrAssign =true;
+    }
     | FOR pidentifier{
         if(findIndexOf(vars,$<str>2)!= -1) {
             cout << "Błąd [linia: " << yylineno \
@@ -299,7 +323,14 @@ command:
         freeReg(expReg);
         isCurrAssign=true;
     } ;
-
+whileloop:
+    WHILE{
+        loop l;
+        createLoop(&l,"",linesNo,"");
+        loops.push_back(l);
+        isCurrAssign = false;
+    } condition
+;
 forloop:
     TO value DO {
         id a = vars.at(findIndexOf(vars,expVal[0]));
