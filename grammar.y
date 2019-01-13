@@ -22,8 +22,8 @@ typedef struct {
     bool isLocal;
 	string name;
     string type; 
-  	long long int size; // 0 forn non array variables
-    long long int startsAt; // 0 forn non array variables
+  	long long int size; // 0 for non array variables
+    long long int startsAt; // 0 for non array variables
     long long int memPlace;
 } id;
 typedef struct{
@@ -382,6 +382,7 @@ forloop:
             setIndex(s.memPlace);
             writeCommandWithArg("LOAD",regVal);
             writeCommandWithTwoArg("JZERO",regVal,to_string(-currLineNo));
+            freeReg(regVal);
         }
         else{
             cout << "zrzut pamieci"<<yylineno << endl;
@@ -471,6 +472,7 @@ forloop:
             setIndex(s.memPlace);
             writeCommandWithArg("LOAD",regVal);
             writeCommandWithTwoArg("JZERO",regVal,to_string(-currLineNo));
+            freeReg(regVal);
         }
         else{
             cout << "zrzut pamieci"<<yylineno << endl;
@@ -3039,6 +3041,7 @@ int main(int argc, char* argv[])
         yyin = fopen(argv[1], "r");
         if ( ! yyin ) {
             cout << "Error - could not open file " << argv[1] << "." << endl;
+            exit(1);
         }
         memAssign =0;
         linesNo = 0;
