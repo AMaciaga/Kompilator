@@ -26,11 +26,16 @@ typedef struct {
     long long int startsAt; // 0 forn non array variables
     long long int memPlace;
 } id;
+typedef struct{
+    string name;
+    long long int currLineNo;
+    string counter; // "" when not needed
+}loop;
 long long int linesNo;
 long long int memAssign;
 vector<string> code;
 vector<id> vars;
-vector<id> loops;
+vector<loop> loops;
 string reg[8];
 bool isCurrAssign=true;
 id assignedVar;
@@ -47,15 +52,18 @@ void writeCommandWithTwoArg(string com,string arg1,string arg2);
 string findEmptyReg();
 void freeReg(string str);
 void addVariable(id s);
+void removeVariable(id s);
 void createVariable(id* s,string name, string type, long long int size,long long int startsAt, long long int mem, bool init,bool isLocal );
+void createLoop(loop* l,string name,long long int currLineNo,string counter);
 void generateNumber(long long int arg,string r);
 void writeCommand(string str);
+void replaceJump(long long int curr, string prev);
 void outCode(string file);
 long long int findIndexOf(vector<id> v, string name);
 void add(id a, id b);
 void addTab(id a, id b, string aInd, string bInd);
-void sub(id a, id b);
-void subTab(id a, id b, string aInd, string bInd);
+void sub(id a, id b,bool isInc);
+void subTab(id a, id b, string aInd, string bInd,bool isInc);
 void mult(id a, id b);
 void multTab(id a, id b, string aInd, string bInd);
 void div(id a, id b);
@@ -171,10 +179,22 @@ command:
     | IF condition THEN commands ENDIF {}
     | WHILE condition DO commands ENDWHILE {}
     | DO commands WHILE condition ENDDO {}
-    | FOR pidentifier FROM value TO value DO commands ENDFOR {
+    | FOR pidentifier{
+        if(findIndexOf(vars,$<str>2)!= -1) {
+            cout << "Błąd [linia: " << yylineno \
+            << "]: Kolejna deklaracja zmiennej " << $<str>2 << "." << endl;
+            exit(1);
+        }
+        else {
+            id s;
+            createVariable(&s,$2,"ID",0,0,memAssign,false,true);
+            memAssign++;
+            addVariable(s);
+        }
+        isCurrAssign = false;
+        assignedVar = vars.at(findIndexOf(vars,$<str>2));
 
-    }
-    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR {}
+    } FROM value forloop 
     | READ identifier SEM {
         if(assignedVar.type == "ARR"){
             string regVal = findEmptyReg();
@@ -244,12 +264,191 @@ command:
             }
         }
         expVal[0] = "-1";
+        expInd[0]= "-1";
 
 
         writeCommandWithArg("PUT",expReg);
         freeReg(expReg);
         isCurrAssign=true;
     } ;
+
+forloop:
+    TO value DO {
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        string regVal = findEmptyReg();
+        if(regVal != "X"){
+            if(a.type == "NUM") {
+                generateNumber(atoi(a.name.c_str()),regVal);
+            }
+            else if(a.type == "ID") {
+                setIndex(a.memPlace);
+                writeCommandWithArg("LOAD",regVal);
+            }
+            else {
+                setIndexForTab(a,expInd[0]);
+                writeCommandWithArg("LOAD",regVal);
+            }
+            setIndex(assignedVar.memPlace);
+            writeCommandWithArg("STORE",regVal);
+            freeReg(regVal);
+            vars.at(findIndexOf(vars,assignedVar.name)).init=true;
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        if(a.type != "ARR" && b.type != "ARR")
+            sub(b, a,true);
+        else{
+            subTab(b,a,expInd[1],expInd[0],true);
+        }
+        id s;
+        string name = "C" + to_string(linesNo);
+        createVariable(&s,name,"ID",0,0,memAssign,true,true);
+        memAssign++;
+        addVariable(s);
+        setIndex(s.memPlace);
+        writeCommandWithArg("STORE",expReg);
+        freeReg(expReg);
+        long long int currLineNo = linesNo;
+        regVal = findEmptyReg();
+        if(regVal != "X"){
+            loop l;
+            createLoop(&l,assignedVar.name,currLineNo,s.name);
+            loops.push_back(l);
+            setIndex(s.memPlace);
+            writeCommandWithArg("LOAD",regVal);
+            writeCommandWithTwoArg("JZERO",regVal,to_string(-currLineNo));
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }  
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
+        isCurrAssign=true;
+
+        
+    }commands ENDFOR {
+        loop l = loops.back();
+        loops.pop_back();
+        
+        string regVal = findEmptyReg();
+        if(regVal != "X"){
+            id a = vars.at(findIndexOf(vars,l.name));
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regVal);
+            writeCommandWithArg("INC",regVal);
+            writeCommandWithArg("STORE",regVal);
+            removeVariable(a);
+            a = vars.at(findIndexOf(vars,l.counter));
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regVal);
+            writeCommandWithArg("DEC",regVal);
+            writeCommandWithArg("STORE",regVal);
+            removeVariable(a);
+            freeReg(regVal);
+            writeCommandWithArg("JUMP",to_string(l.currLineNo));
+            replaceJump(linesNo,to_string(-l.currLineNo));
+            
+            
+        } 
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+
+    }
+    | DOWNTO value DO{
+        id a = vars.at(findIndexOf(vars,expVal[0]));
+        id b = vars.at(findIndexOf(vars,expVal[1]));
+        string regVal = findEmptyReg();
+        if(regVal != "X"){
+            if(a.type == "NUM") {
+                generateNumber(atoi(a.name.c_str()),regVal);
+            }
+            else if(a.type == "ID") {
+                setIndex(a.memPlace);
+                writeCommandWithArg("LOAD",regVal);
+            }
+            else {
+                setIndexForTab(a,expInd[0]);
+                writeCommandWithArg("LOAD",regVal);
+            }
+            setIndex(assignedVar.memPlace);
+            writeCommandWithArg("STORE",regVal);
+            freeReg(regVal);
+            vars.at(findIndexOf(vars,assignedVar.name)).init=true;
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+        if(a.type != "ARR" && b.type != "ARR")
+            sub(a,b,true);
+        else{
+            subTab(a,b,expInd[0],expInd[1],true);
+        }
+        id s;
+        string name = "C" + to_string(linesNo);
+        createVariable(&s,name,"ID",0,0,memAssign,true,true);
+        memAssign++;
+        addVariable(s);
+        setIndex(s.memPlace);
+        writeCommandWithArg("STORE",expReg);
+        freeReg(expReg);
+        long long int currLineNo = linesNo;
+        regVal = findEmptyReg();
+        if(regVal != "X"){
+            loop l;
+            createLoop(&l,assignedVar.name,currLineNo,s.name);
+            loops.push_back(l);
+            setIndex(s.memPlace);
+            writeCommandWithArg("LOAD",regVal);
+            writeCommandWithTwoArg("JZERO",regVal,to_string(-currLineNo));
+        }
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }  
+        expVal[0] = "-1";
+        expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
+        isCurrAssign=true;
+    } commands ENDFOR{
+        loop l = loops.back();
+        loops.pop_back();
+        
+        string regVal = findEmptyReg();
+        if(regVal != "X"){
+            id a = vars.at(findIndexOf(vars,l.name));
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regVal);
+            writeCommandWithArg("DEC",regVal);
+            writeCommandWithArg("STORE",regVal);
+            removeVariable(a);
+            a = vars.at(findIndexOf(vars,l.counter));
+            setIndex(a.memPlace);
+            writeCommandWithArg("LOAD",regVal);
+            writeCommandWithArg("DEC",regVal);
+            writeCommandWithArg("STORE",regVal);
+            removeVariable(a);
+            freeReg(regVal);
+            writeCommandWithArg("JUMP",to_string(l.currLineNo));
+            replaceJump(linesNo,to_string(-l.currLineNo));
+            
+            
+        } 
+        else{
+            cout << "zrzut pamieci" << endl;
+            exit(1);
+        }
+    }
+;
 
 expression: 
     value {
@@ -302,17 +501,21 @@ expression:
         }
         expVal[0] = "-1";
         expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
     }
     | value SUB value {
         id a = vars.at(findIndexOf(vars,expVal[0]));
         id b = vars.at(findIndexOf(vars,expVal[1]));
         if(a.type != "ARR" && b.type != "ARR")
-            sub(a, b);
+            sub(a, b,false);
         else{
-            subTab(a,b,expInd[0],expInd[1]);
+            subTab(a,b,expInd[0],expInd[1],false);
         }
         expVal[0] = "-1";
         expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
     }
     | value MUL value {
         id a = vars.at(findIndexOf(vars,expVal[0]));
@@ -324,6 +527,8 @@ expression:
         }
         expVal[0] = "-1";
         expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
     }
     | value DIV value {
         id a = vars.at(findIndexOf(vars,expVal[0]));
@@ -340,6 +545,8 @@ expression:
         }
         expVal[0] = "-1";
         expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
     }
     | value MOD value {
         id a = vars.at(findIndexOf(vars,expVal[0]));
@@ -356,6 +563,8 @@ expression:
         }
         expVal[0] = "-1";
         expVal[1] = "-1";
+        expInd[0]= "-1";
+        expInd[1]= "-1";
     };
 
 condition:   
@@ -761,7 +970,7 @@ void addTab(id a, id b, string aInd, string bInd){
     }
 
 }
-void sub(id a, id b){
+void sub(id a, id b,bool isInc){
 
     if(a.type == "NUM" && b.type == "NUM") {
         string regValA = findEmptyReg();
@@ -769,6 +978,9 @@ void sub(id a, id b){
         if(regValA != "X" && regValB != "X"  ){
             generateNumber(atoi(a.name.c_str()),regValA);
             generateNumber(atoi(b.name.c_str()),regValB);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -786,6 +998,9 @@ void sub(id a, id b){
             generateNumber(atoi(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -802,6 +1017,9 @@ void sub(id a, id b){
             generateNumber(atoi(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -818,6 +1036,9 @@ void sub(id a, id b){
                 setIndex(a.memPlace);
                 writeCommandWithArg("LOAD",regValA);
                 writeCommandWithTwoArg("SUB",regValA,regValA);
+                if(isInc){
+                    writeCommandWithArg("INC",regValA);
+                }
                 expReg = regValA;
             }
             else{
@@ -833,6 +1054,9 @@ void sub(id a, id b){
                 writeCommandWithArg("LOAD",regValA);
                 setIndex(b.memPlace);
                 writeCommandWithArg("LOAD",regValB);
+                if(isInc){
+                    writeCommandWithArg("INC",regValA);
+                }
                 writeCommandWithTwoArg("SUB",regValA,regValB);
                 expReg = regValA;
                 freeReg(regValB);
@@ -845,7 +1069,7 @@ void sub(id a, id b){
     }
 }
 
-void subTab(id a, id b, string aInd, string bInd){
+void subTab(id a, id b, string aInd, string bInd,bool isInc){
     if(a.type == "ARR" && b.type == "NUM") {
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
@@ -853,6 +1077,9 @@ void subTab(id a, id b, string aInd, string bInd){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
             generateNumber(atoi(b.name.c_str()),regValB);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -870,6 +1097,9 @@ void subTab(id a, id b, string aInd, string bInd){
             generateNumber(atoi(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -887,6 +1117,9 @@ void subTab(id a, id b, string aInd, string bInd){
             writeCommandWithArg("LOAD",regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -904,6 +1137,9 @@ void subTab(id a, id b, string aInd, string bInd){
             writeCommandWithArg("LOAD",regValB);
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
+            if(isInc){
+                writeCommandWithArg("INC",regValA);
+            }
             writeCommandWithTwoArg("SUB",regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -920,6 +1156,9 @@ void subTab(id a, id b, string aInd, string bInd){
                 setIndexForTab(a,aInd);
                 writeCommandWithArg("LOAD",regValA);
                 writeCommandWithTwoArg("SUB",regValA,regValA);
+                if(isInc){
+                    writeCommandWithArg("INC",regValA);
+                }
                 expReg = regValA;
             }
             else{
@@ -935,6 +1174,9 @@ void subTab(id a, id b, string aInd, string bInd){
                 writeCommandWithArg("LOAD",regValA);
                 setIndexForTab(b,bInd);
                 writeCommandWithArg("LOAD",regValB);
+                if(isInc){
+                    writeCommandWithArg("INC",regValA);
+                }
                 writeCommandWithTwoArg("SUB",regValA,regValB);
                 expReg = regValA;
                 freeReg(regValB);
@@ -1611,6 +1853,11 @@ void createVariable(id* s,string name, string type, long long int size,long long
     s->init = init;
     s->isLocal = isLocal;
 }
+void createLoop(loop* l,string name,long long int currLineNo,string counter){
+    l->name = name;
+    l->currLineNo = currLineNo;
+    l->counter = counter;
+}
 
 void addVariable(id s){
     vars.push_back(s);
@@ -1633,6 +1880,18 @@ void freeReg(string str){
 void writeCommand(string str) {
     code.push_back(str);
     linesNo++;
+}
+void replaceJump(long long int curr, string prev){
+    for (int i = code.size()-1;i>=0;--i){
+        string line = code.at(i);
+        if(line.substr(0,5)=="JZERO"){
+            long long int len = line.size()-8;
+            if(line.substr(8,len)==prev){
+                string newLine = line.substr(0,8)+to_string(curr);
+                code.at(i)=newLine;
+            }
+        }
+    }
 }
 void generateNumber(long long int arg,string r){
     vector<string>genNum;

@@ -85,7 +85,7 @@
 "READ"  {return READ;}
 "WRITE"  {return WRITE;}
 
-[A-Z]+	     {printf("ERROR_INVALID_KEYWORD");}
+[A-Z]+	     {}
 [0-9]+         {
         
                 yylval.str = (char *)strdup(yytext);
