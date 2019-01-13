@@ -801,13 +801,13 @@ identifier:
         }
         
         if(vars.at(index1).type != "ARR") {
-            cout << "Błąd [okolice linii " << yylineno << \
+            cout << "Błąd [linia " << yylineno << \
             "]: Zmienna " << $1 << " nie jest tablicą." << endl;
             exit(1);
         }
         else {
             if(!vars.at(index2).init ) {
-                cout << "Błąd [okolice linii " << yylineno << \
+                cout << "Błąd [linia " << yylineno << \
                 "]: Próba użycia niezainicjalizowanej zmiennej " << $3 << "." << endl;
                 exit(1);
             }
@@ -838,7 +838,7 @@ identifier:
         }
 
         if(vars.at(index1).type != "ARR") {
-            cout << "Błąd [okolice linii " << yylineno << \
+            cout << "Błąd [linia " << yylineno << \
             "]: Zmienna " << $1 << " nie jest tablicą." << endl;
             exit(1);
         }
