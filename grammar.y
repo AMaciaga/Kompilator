@@ -199,6 +199,7 @@ command:
     }
     | IF {isCurrAssign = false;} condition THEN{
         writeCommandWithTwoArg("JZERO",expReg,to_string(linesNo+2));
+        freeReg(expReg);
         loop l;
         createLoop(&l,"",linesNo,"");
         loops.push_back(l);
@@ -207,6 +208,7 @@ command:
         } commands ifcond
     | whileloop DO{
         writeCommandWithTwoArg("JZERO",expReg,to_string(linesNo+2));
+        freeReg(expReg);
         loop l;
         createLoop(&l,"",linesNo,"");
         loops.push_back(l);
@@ -229,6 +231,7 @@ command:
         loop l = loops.back();
         loops.pop_back();
         writeCommandWithTwoArg("JZERO",expReg,to_string(l.currLineNo));
+        freeReg(expReg);
         isCurrAssign =true;
     }
     | FOR pidentifier{
@@ -257,7 +260,7 @@ command:
                 freeReg(regVal);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -270,7 +273,7 @@ command:
                 freeReg(regVal);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -287,7 +290,7 @@ command:
                 expReg = regVal;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -299,7 +302,7 @@ command:
                 expReg = regVal;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -311,7 +314,7 @@ command:
                 expReg = regVal;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -354,7 +357,7 @@ forloop:
             vars.at(findIndexOf(vars,assignedVar.name)).init=true;
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         if(a.type != "ARR" && b.type != "ARR")
@@ -381,7 +384,7 @@ forloop:
             writeCommandWithTwoArg("JZERO",regVal,to_string(-currLineNo));
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }  
         expVal[0] = "-1";
@@ -416,7 +419,7 @@ forloop:
             
         } 
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
 
@@ -443,7 +446,7 @@ forloop:
             vars.at(findIndexOf(vars,assignedVar.name)).init=true;
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         if(a.type != "ARR" && b.type != "ARR")
@@ -470,7 +473,7 @@ forloop:
             writeCommandWithTwoArg("JZERO",regVal,to_string(-currLineNo));
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }  
         expVal[0] = "-1";
@@ -503,7 +506,7 @@ forloop:
             
         } 
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -539,7 +542,7 @@ expression:
                 expReg = regVal;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -551,7 +554,7 @@ expression:
                 expReg = regVal;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -563,7 +566,7 @@ expression:
                 expReg = regVal;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -886,26 +889,24 @@ void setIndexForTab(id tab, string ind){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci 4 "<<yylineno << endl;
             exit(1);
         }
         
     }
     else if(index.type == "ID"){
         string regValA = findEmptyReg();
-        string regValB = findEmptyReg();
-        if(regValA != "X" && regValB != "X"  ){
+        if(regValA != "X"  ){
             setIndex(index.memPlace);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(tab.startsAt,regValB);
             setIndex(tab.memPlace);
             writeCommandWithTwoArg("ADD","A",regValA);
-            writeCommandWithTwoArg("SUB","A",regValB);
+            generateNumber(tab.startsAt,regValA);
+            writeCommandWithTwoArg("SUB","A",regValA);
             freeReg(regValA);
-            freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci 5 " <<yylineno << endl;
             exit(1);
         }
         
@@ -929,6 +930,7 @@ string findEmptyReg(){
             char character = (char) unicode;
             string text(1,character);
             reg[i]="full";
+
             return text;
         }
         
@@ -951,7 +953,7 @@ void add(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -968,7 +970,7 @@ void add(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -984,7 +986,7 @@ void add(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -998,7 +1000,7 @@ void add(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1015,7 +1017,7 @@ void add(id a, id b){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1034,7 +1036,7 @@ void addTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1051,7 +1053,7 @@ void addTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1068,7 +1070,7 @@ void addTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1085,7 +1087,7 @@ void addTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1099,7 +1101,7 @@ void addTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1116,7 +1118,7 @@ void addTab(id a, id b, string aInd, string bInd){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1144,7 +1146,7 @@ void sub(id a, id b,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1161,7 +1163,7 @@ void sub(id a, id b,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1177,7 +1179,7 @@ void sub(id a, id b,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1194,7 +1196,7 @@ void sub(id a, id b,bool isInc){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1211,7 +1213,7 @@ void sub(id a, id b,bool isInc){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1231,7 +1233,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1248,7 +1250,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1265,7 +1267,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1282,7 +1284,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1299,7 +1301,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1316,7 +1318,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1348,7 +1350,7 @@ void mult(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1366,7 +1368,7 @@ void mult(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1384,7 +1386,7 @@ void mult(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1404,7 +1406,7 @@ void mult(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1425,7 +1427,7 @@ void multTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1444,7 +1446,7 @@ void multTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1463,7 +1465,7 @@ void multTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1482,7 +1484,7 @@ void multTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1502,7 +1504,7 @@ void multTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1553,7 +1555,7 @@ void div(id a, id b){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1576,7 +1578,7 @@ void div(id a, id b){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1598,7 +1600,7 @@ void div(id a, id b){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1622,7 +1624,7 @@ void div(id a, id b){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1648,7 +1650,7 @@ void divTab(id a, id b, string aInd, string bInd){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1671,7 +1673,7 @@ void divTab(id a, id b, string aInd, string bInd){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1694,7 +1696,7 @@ void divTab(id a, id b, string aInd, string bInd){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1717,7 +1719,7 @@ void divTab(id a, id b, string aInd, string bInd){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1741,7 +1743,7 @@ void divTab(id a, id b, string aInd, string bInd){
             freeReg(regValE);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1774,7 +1776,7 @@ void eq(id a, id b){
             
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1794,7 +1796,7 @@ void eq(id a, id b){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1812,7 +1814,7 @@ void eq(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1824,7 +1826,7 @@ void eq(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1844,7 +1846,7 @@ void eq(id a, id b){
 
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1866,7 +1868,7 @@ void eqTab(id a, id b, string aInd, string bInd){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -1887,7 +1889,7 @@ void eqTab(id a, id b, string aInd, string bInd){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1908,7 +1910,7 @@ void eqTab(id a, id b, string aInd, string bInd){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1927,7 +1929,7 @@ void eqTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -1939,7 +1941,7 @@ void eqTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1960,7 +1962,7 @@ void eqTab(id a, id b, string aInd, string bInd){
 
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -1998,7 +2000,7 @@ void neq(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2018,7 +2020,7 @@ void neq(id a, id b){
             
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2036,7 +2038,7 @@ void neq(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2048,7 +2050,7 @@ void neq(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2069,7 +2071,7 @@ void neq(id a, id b){
 
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2091,7 +2093,7 @@ void neqTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2111,7 +2113,7 @@ void neqTab(id a, id b, string aInd, string bInd){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2131,7 +2133,7 @@ void neqTab(id a, id b, string aInd, string bInd){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2151,7 +2153,7 @@ void neqTab(id a, id b, string aInd, string bInd){
 
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2163,7 +2165,7 @@ void neqTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2183,7 +2185,7 @@ void neqTab(id a, id b, string aInd, string bInd){
 
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2208,7 +2210,7 @@ void lt(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2225,7 +2227,7 @@ void lt(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2241,7 +2243,7 @@ void lt(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2253,7 +2255,7 @@ void lt(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2270,7 +2272,7 @@ void lt(id a, id b){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2289,7 +2291,7 @@ void ltTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2306,7 +2308,7 @@ void ltTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2323,7 +2325,7 @@ void ltTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2340,7 +2342,7 @@ void ltTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2352,7 +2354,7 @@ void ltTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2369,7 +2371,7 @@ void ltTab(id a, id b, string aInd, string bInd){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2394,7 +2396,7 @@ void gt(id a, id b){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2411,7 +2413,7 @@ void gt(id a, id b){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2427,7 +2429,7 @@ void gt(id a, id b){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2439,7 +2441,7 @@ void gt(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2456,7 +2458,7 @@ void gt(id a, id b){
                 freeReg(regValA);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2475,7 +2477,7 @@ void gtTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2492,7 +2494,7 @@ void gtTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2509,7 +2511,7 @@ void gtTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2526,7 +2528,7 @@ void gtTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci 3 "<<yylineno << endl;
             exit(1);
         }
     }
@@ -2538,7 +2540,7 @@ void gtTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2555,7 +2557,7 @@ void gtTab(id a, id b, string aInd, string bInd){
                 freeReg(regValA);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2579,7 +2581,7 @@ void le(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2596,7 +2598,7 @@ void le(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2612,7 +2614,7 @@ void le(id a, id b){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2624,7 +2626,7 @@ void le(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2641,7 +2643,7 @@ void le(id a, id b){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2660,7 +2662,7 @@ void leTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2677,7 +2679,7 @@ void leTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2694,7 +2696,7 @@ void leTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2711,7 +2713,7 @@ void leTab(id a, id b, string aInd, string bInd){
             freeReg(regValB);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2723,7 +2725,7 @@ void leTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2740,7 +2742,7 @@ void leTab(id a, id b, string aInd, string bInd){
                 freeReg(regValB);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2764,7 +2766,7 @@ void ge(id a, id b){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2781,7 +2783,7 @@ void ge(id a, id b){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2797,7 +2799,7 @@ void ge(id a, id b){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2809,7 +2811,7 @@ void ge(id a, id b){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2826,7 +2828,7 @@ void ge(id a, id b){
                 freeReg(regValA);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2845,7 +2847,7 @@ void geTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
         
@@ -2862,7 +2864,7 @@ void geTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2879,7 +2881,7 @@ void geTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2896,7 +2898,7 @@ void geTab(id a, id b, string aInd, string bInd){
             freeReg(regValA);
         }
         else{
-            cout << "zrzut pamieci" << endl;
+            cout << "zrzut pamieci"<<yylineno << endl;
             exit(1);
         }
     }
@@ -2908,7 +2910,7 @@ void geTab(id a, id b, string aInd, string bInd){
                 expReg = regValA;
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
@@ -2925,7 +2927,7 @@ void geTab(id a, id b, string aInd, string bInd){
                 freeReg(regValA);
             }
             else{
-                cout << "zrzut pamieci" << endl;
+                cout << "zrzut pamieci"<<yylineno << endl;
                 exit(1);
             }
         }
