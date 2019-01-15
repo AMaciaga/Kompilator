@@ -164,15 +164,15 @@ declarations:
             << "]: Kolejna deklaracja zmiennej " << $<str>2 << "." << endl;
             exit(1);
         }
-        else if(atoi($4)>atoi($6)){
+        else if(atoll($4)>atoll($6)){
             cout << "Błąd [linia: " << yylineno \
             << "]: Niepoprawna deklaracja zmiennej " << $<str>2 << ". Pierwsza liczba wieksza od drugiej" << endl;
             exit(1);
         }
         else {
             id s;
-            long long int size = atoi($6)-atoi($4)+1;
-            createVariable(&s,$2,"ARR",size,atoi($4),memAssign,false,false);
+            long long int size = atoll($6)-atoll($4)+1;
+            createVariable(&s,$2,"ARR",size,atoll($4),memAssign,false,false);
             memAssign+= size;
             addVariable(s);
         }
@@ -286,7 +286,7 @@ command:
         if(arg.type == "NUM"){
             string regVal = findEmptyReg();
             if(regVal != "X"){
-                generateNumber(atoi(arg.name.c_str()),regVal);
+                generateNumber(atoll(arg.name.c_str()),regVal);
                 expReg = regVal;
             }
             else{
@@ -341,7 +341,7 @@ forloop:
         string regVal = findEmptyReg();
         if(regVal != "X"){
             if(a.type == "NUM") {
-                generateNumber(atoi(a.name.c_str()),regVal);
+                generateNumber(atoll(a.name.c_str()),regVal);
             }
             else if(a.type == "ID") {
                 setIndex(a.memPlace);
@@ -431,7 +431,7 @@ forloop:
         string regVal = findEmptyReg();
         if(regVal != "X"){
             if(a.type == "NUM") {
-                generateNumber(atoi(a.name.c_str()),regVal);
+                generateNumber(atoll(a.name.c_str()),regVal);
             }
             else if(a.type == "ID") {
                 setIndex(a.memPlace);
@@ -540,7 +540,7 @@ expression:
         if(arg.type == "NUM"){
             string regVal = findEmptyReg();
             if(regVal != "X"){
-                generateNumber(atoi(arg.name.c_str()),regVal);
+                generateNumber(atoll(arg.name.c_str()),regVal);
                 expReg = regVal;
             }
             else{
@@ -883,7 +883,7 @@ void setIndexForTab(id tab, string ind){
     if(index.type == "NUM"){
         string regValA = findEmptyReg();
         if(regValA != "X" ){
-            generateNumber(atoi(index.name.c_str()),regValA);
+            generateNumber(atoll(index.name.c_str()),regValA);
             setIndex(tab.memPlace);
             writeCommandWithTwoArg("ADD","A",regValA);
             generateNumber(tab.startsAt,regValA);
@@ -948,8 +948,8 @@ void add(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             addCode(regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -964,7 +964,7 @@ void add(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             addCode(regValA,regValB);
@@ -980,7 +980,7 @@ void add(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             addCode(regValA,regValB);
@@ -1032,7 +1032,7 @@ void addTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             addCode(regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -1047,7 +1047,7 @@ void addTab(id a, id b, string aInd, string bInd){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             addCode(regValA,regValB);
@@ -1141,8 +1141,8 @@ void sub(id a, id b,bool isInc){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             subCode(regValA,regValB,isInc);
             expReg = regValA;
             freeReg(regValB);
@@ -1157,7 +1157,7 @@ void sub(id a, id b,bool isInc){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             subCode(regValA,regValB,isInc);
@@ -1173,7 +1173,7 @@ void sub(id a, id b,bool isInc){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             subCode(regValA,regValB,isInc);
@@ -1229,7 +1229,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
         if(regValA != "X" && regValB != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             subCode(regValA,regValB,isInc);
             expReg = regValA;
             freeReg(regValB);
@@ -1244,7 +1244,7 @@ void subTab(id a, id b, string aInd, string bInd,bool isInc){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             subCode(regValA,regValB,isInc);
@@ -1344,8 +1344,8 @@ void mult(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             multCode(regValA,regValB,regValC);
             expReg = regValC;
             freeReg(regValA);
@@ -1362,7 +1362,7 @@ void mult(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             multCode(regValA,regValB,regValC);
@@ -1379,7 +1379,7 @@ void mult(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X"  && regValC != "X" ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             multCode(regValA,regValB,regValC);
@@ -1422,7 +1422,7 @@ void multTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X" && regValC != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             multCode(regValA,regValB,regValC);
             expReg = regValC;
             freeReg(regValA);
@@ -1439,7 +1439,7 @@ void multTab(id a, id b, string aInd, string bInd){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X"&& regValC != "X"   ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             multCode(regValA,regValB,regValC);
@@ -1547,8 +1547,8 @@ void div(id a, id b){
         string regValD = findEmptyReg();
         string regValE = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             divCode( regValA, regValB, regValC, regValD, regValE);
             divReg = regValC;
             modReg = regValA;
@@ -1569,7 +1569,7 @@ void div(id a, id b){
         string regValD = findEmptyReg();
         string regValE = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             divCode( regValA, regValB, regValC, regValD, regValE);
@@ -1591,7 +1591,7 @@ void div(id a, id b){
         string regValD = findEmptyReg();
         string regValE = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             divCode( regValA, regValB, regValC, regValD, regValE);
@@ -1643,7 +1643,7 @@ void divTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X" && regValC != "X" && regValD != "X" && regValE != "X" ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             divCode( regValA, regValB, regValC, regValD, regValE);
             divReg = regValC;
             modReg = regValA;
@@ -1664,7 +1664,7 @@ void divTab(id a, id b, string aInd, string bInd){
         string regValD = findEmptyReg();
         string regValE = findEmptyReg();
         if(regValA != "X" && regValB != "X"&& regValC != "X"  && regValD != "X" && regValE != "X" ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             divCode( regValA, regValB, regValC, regValD, regValE);
@@ -1769,8 +1769,8 @@ void eq(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X"){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             eqCode( regValA, regValB, regValC);
             expReg = regValC;
             freeReg(regValA);
@@ -1788,7 +1788,7 @@ void eq(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             eqCode( regValA, regValB, regValC);
@@ -1807,7 +1807,7 @@ void eq(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X"  && regValC != "X" ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             eqCode( regValA, regValB, regValC);
@@ -1862,7 +1862,7 @@ void eqTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  && regValC != "X" ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             eqCode( regValA, regValB, regValC);
             expReg = regValC;
             freeReg(regValA);
@@ -1881,7 +1881,7 @@ void eqTab(id a, id b, string aInd, string bInd){
         string regValC = findEmptyReg();
 
         if(regValA != "X" && regValB != "X"  && regValC != "X" ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             eqCode( regValA, regValB, regValC);
@@ -1994,8 +1994,8 @@ void neq(id a, id b){
         string regValC = findEmptyReg();
        
         if(regValA != "X" && regValB != "X" && regValC != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             neqCode( regValA, regValB, regValC);
             expReg = regValC;
             freeReg(regValA);
@@ -2012,7 +2012,7 @@ void neq(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X" && regValC != "X" ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             neqCode( regValA, regValB, regValC);
@@ -2031,7 +2031,7 @@ void neq(id a, id b){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X"  && regValC != "X" ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             neqCode( regValA, regValB, regValC);
@@ -2088,7 +2088,7 @@ void neqTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  && regValC != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             neqCode( regValA, regValB, regValC);
             expReg = regValC;
             freeReg(regValA);
@@ -2105,7 +2105,7 @@ void neqTab(id a, id b, string aInd, string bInd){
         string regValB = findEmptyReg();
         string regValC = findEmptyReg();
         if(regValA != "X" && regValB != "X"  && regValC != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             neqCode( regValA, regValB, regValC);
@@ -2205,8 +2205,8 @@ void lt(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             ltCode(regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -2221,7 +2221,7 @@ void lt(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             ltCode(regValA,regValB);
@@ -2237,7 +2237,7 @@ void lt(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             ltCode(regValA,regValB);
@@ -2287,7 +2287,7 @@ void ltTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             ltCode(regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -2302,7 +2302,7 @@ void ltTab(id a, id b, string aInd, string bInd){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             ltCode(regValA,regValB);
@@ -2391,8 +2391,8 @@ void gt(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             gtCode(regValA,regValB);
             expReg = regValB;
             freeReg(regValA);
@@ -2407,7 +2407,7 @@ void gt(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             gtCode(regValA,regValB);
@@ -2423,7 +2423,7 @@ void gt(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             gtCode(regValA,regValB);
@@ -2473,7 +2473,7 @@ void gtTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             gtCode(regValA,regValB);
             expReg = regValB;
             freeReg(regValA);
@@ -2488,7 +2488,7 @@ void gtTab(id a, id b, string aInd, string bInd){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             gtCode(regValA,regValB);
@@ -2576,8 +2576,8 @@ void le(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             leCode(regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -2592,7 +2592,7 @@ void le(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             leCode(regValA,regValB);
@@ -2608,7 +2608,7 @@ void le(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             leCode(regValA,regValB);
@@ -2658,7 +2658,7 @@ void leTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             leCode(regValA,regValB);
             expReg = regValA;
             freeReg(regValB);
@@ -2673,7 +2673,7 @@ void leTab(id a, id b, string aInd, string bInd){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             leCode(regValA,regValB);
@@ -2761,8 +2761,8 @@ void ge(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(a.name.c_str()),regValA);
+            generateNumber(atoll(b.name.c_str()),regValB);
             geCode(regValA,regValB);
             expReg = regValB;
             freeReg(regValA);
@@ -2777,7 +2777,7 @@ void ge(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndex(b.memPlace);
             writeCommandWithArg("LOAD",regValB);
             geCode(regValA,regValB);
@@ -2793,7 +2793,7 @@ void ge(id a, id b){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             setIndex(a.memPlace);
             writeCommandWithArg("LOAD",regValA);
             geCode(regValA,regValB);
@@ -2843,7 +2843,7 @@ void geTab(id a, id b, string aInd, string bInd){
         if(regValA != "X" && regValB != "X"  ){
             setIndexForTab(a,aInd);
             writeCommandWithArg("LOAD",regValA);
-            generateNumber(atoi(b.name.c_str()),regValB);
+            generateNumber(atoll(b.name.c_str()),regValB);
             geCode(regValA,regValB);
             expReg = regValB;
             freeReg(regValA);
@@ -2858,7 +2858,7 @@ void geTab(id a, id b, string aInd, string bInd){
         string regValA = findEmptyReg();
         string regValB = findEmptyReg();
         if(regValA != "X" && regValB != "X"  ){
-            generateNumber(atoi(a.name.c_str()),regValA);
+            generateNumber(atoll(a.name.c_str()),regValA);
             setIndexForTab(b,bInd);
             writeCommandWithArg("LOAD",regValB);
             geCode(regValA,regValB);
@@ -2997,18 +2997,19 @@ void replaceJump(long long int curr, string prev){
 }
 void generateNumber(long long int arg,string r){
     vector<string>genNum;
+    string temp;
     while(arg){
         if(arg & 1){
-            string temp = "INC "+ r;
+            temp = "INC "+ r;
             genNum.push_back(temp);
         }
         arg>>=1;
         if(arg){
-            string temp = "ADD "+ r+" "+r;
+            temp = "ADD "+ r+" "+r;
             genNum.push_back(temp);
         }
     }
-    string temp = "SUB "+ r+" "+r;
+    temp = "SUB "+ r+" "+r;
     genNum.push_back(temp);
     for(int i=genNum.size()-1;i>=0;--i){
         writeCommand(genNum.at(i));
@@ -3052,6 +3053,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 int yyerror(string str){
-    cout<<"Blad w lini "<<yylineno<<" - "<<str<<"."<<endl;
+    cout<<"Nierozpoznany symbol w lini "<<yylineno<<"."<<endl;
     exit(1);
 }

@@ -85,7 +85,6 @@
 "READ"  {return READ;}
 "WRITE"  {return WRITE;}
 
-[A-Z]+	     {}
 [0-9]+         {
         
                 yylval.str = (char *)strdup(yytext);
@@ -97,6 +96,6 @@
                 return IDENTIFIER;  
                         }
 [ \n\t\r]         
-
+.               ;
 
 %%
